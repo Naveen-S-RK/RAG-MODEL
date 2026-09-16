@@ -1,4 +1,6 @@
+streamlit
+sentence-transformers
+pinecone-client
+groq
 pypdf
-openai
-pinecone
-dotenv
+python-dotenv
