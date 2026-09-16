@@ -1,6 +1,6 @@
 streamlit
 sentence-transformers
-pinecone-client
+pinecone
 groq
 pypdf
 python-dotenv
