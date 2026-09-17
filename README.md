@@ -1,4 +1,4 @@
-# 📄 HR Policy RAG Assistant
+# 📄 HR + Digital Workplace Policy RAG Assistant
 
 A Retrieval-Augmented Generation (RAG) chatbot that answers questions about your company's HR and Digital Workplace policy. It reads a PDF policy document, chunks and embeds it locally, stores the vectors in Pinecone, and uses Groq's LLM API to generate grounded answers through a Streamlit chat interface.
 
@@ -137,6 +137,20 @@ python QueryProcessor.py
 
 This runs a sample query (`"What is the work timing policy?"`) through the pipeline and prints the answer to the console.
 
+## Sample Interaction
+
+**Q: What is the leave policy?**
+
+The assistant retrieves the relevant chunks from the policy PDF and responds with a grounded, structured answer (rendered from the retrieved context, not the model's general knowledge):
+
+| Leave Category | Key Points |
+|---|---|
+| Annual / Earned Leave | 24 days per calendar year, accrued monthly. Unused leave may be carried forward up to 15 days. Can be encashed on separation, subject to applicable rules. |
+| Casual Leave | For short-term personal requirements. Must be approved by the reporting manager wherever reasonably practicable before the leave is taken. |
+| Sick Leave | For periods when an employee is unable to work due to illness. A medical certificate may be requested for extended absences. |
+
+This demonstrates the grounding behavior described in requirement #8 — the answer is composed entirely from the retrieved PDF chunks.
+
 ## Tech Stack
 
 | Component        | Technology                          |
@@ -153,6 +167,27 @@ This runs a sample query (`"What is the work timing policy?"`) through the pipel
 - **Chunk size / overlap**: adjust `chunk_size` and `chunk_overlap` in the `chunk_pages()` call in `dataprocessor.py`.
 - **Top-k retrieved chunks**: the Streamlit app retrieves the top 3 matches (`app.py`); `QueryProcessor.py` uses the `search_in_pinecone` default of 4. Adjust as needed.
 - **LLM behavior**: the system prompt in `llm.py` restricts answers strictly to the retrieved context, and tells the model to say so when the context is insufficient.
+
+## Known Limitations & Future Improvements
+
+- **Chunking strategy**: fixed-size character chunking is simple but can split sentences or table rows mid-way; semantic/recursive chunking could improve retrieval precision for structured tables like the leave policy.
+- **No reranking step**: retrieval relies purely on top-k vector similarity; adding a reranker could improve answer quality for ambiguous questions.
+- **No cross-session memory**: chat history persists only within a Streamlit session; there's no long-term conversation memory across sessions.
+- **Single-document scope**: the pipeline is built around one PDF; ingesting multiple documents would need source-tagging in the vector metadata to disambiguate answers.
+
+## AI Tools Disclosure
+
+Parts of this project were built with the assistance of AI tools (Claude), used for:
+- Debugging the Pinecone batch upsert logic
+- Refining the system prompt in `llm.py` to enforce context-grounded answering
+- Drafting and structuring this README
+
+The core architecture — chunking strategy, retrieval pipeline design, and prompt design — was designed and implemented manually, and I can walk through any part of it in detail.
+
+## Testing Notes
+
+- Live demo verified working in an incognito/private browser window (see screenshot below — sample query "What is the leave policy?" returning a grounded, table-formatted answer from the ingested PDF).
+- GitHub repository confirmed public and accessible.
 
 ## Submission
 
