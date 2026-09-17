@@ -10,21 +10,54 @@ st.set_page_config(
     layout="centered"
 )
 
-# App Title & Description
-st.title("📄 HR Policy Assistant")
-st.markdown("Ask any question about your company's HR policy, and I'll find the answer for you using your local RAG model!")
+# Sidebar styling and controls
+with st.sidebar:
+    st.image("https://img.icons8.com/clouds/100/conference-call.png", width=80)
+    st.title("Control Panel")
+    st.markdown("Manage your assistant session and explore company guidelines effortlessly.")
+    
+    st.divider()
+    
+    if st.button("🗑️ Clear Chat History", use_container_width=True):
+        st.session_state.messages = []
+        st.rerun()
+        
+    st.markdown("### Quick Tips")
+    st.info("Ask about leave policies, code of conduct, insurance benefits, or office timings.")
+
+# App Title & Description with an accent container
+with st.container():
+    st.title("📄 HR Policy Assistant")
+    st.markdown("Get instant, accurate answers about your company's HR policies powered by your secure local RAG model.")
+    st.divider()
 
 # Initialize chat history in session state if it doesn't exist
 if "messages" not in st.session_state:
     st.session_state.messages = []
+
+# Quick-start suggestion buttons if chat is empty
+if not st.session_state.messages:
+    st.markdown("##### 💡 Suggested Questions:")
+    col1, col2 = st.columns(2)
+    with col1:
+        if st.button("What is the annual leave policy?"):
+            st.session_state.pending_prompt = "What is the annual leave policy?"
+    with col2:
+        if st.button("How do I apply for medical reimbursement?"):
+            st.session_state.pending_prompt = "How do I apply for medical reimbursement?"
 
 # Display prior chat messages
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
 
-# User input box at the bottom of the screen
-if prompt := st.chat_input("Type your question here (e.g., What is the leave policy?)..."):
+# Handle prompt either from chat input or quick suggestion buttons
+prompt = st.chat_input("Type your question here...")
+if "pending_prompt" in st.session_state and st.session_state.pending_prompt:
+    prompt = st.session_state.pending_prompt
+    st.session_state.pending_prompt = None
+
+if prompt:
     # Add user message to state and display it
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user"):
@@ -40,11 +73,15 @@ if prompt := st.chat_input("Type your question here (e.g., What is the leave pol
                 # 2. Search Pinecone
                 matched_chunks = search_in_pinecone(query_vector, top_k=3)
                 
-                # 3. Format context
-                context = "\n\n".join(matched_chunks)
-                
-                # 4. Get response from Groq
-                answer = query_llm_with_context(prompt, context)
+                # Handle empty vector search results gracefully
+                if not matched_chunks:
+                    answer = "I couldn't find any relevant details regarding that in the uploaded HR policy documents."
+                else:
+                    # 3. Format context
+                    context = "\n\n".join(matched_chunks)
+                    
+                    # 4. Get response from Groq
+                    answer = query_llm_with_context(prompt, context)
                 
                 # Display output
                 st.markdown(answer)
