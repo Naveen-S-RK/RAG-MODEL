@@ -5,7 +5,7 @@ from vectorstore import store_in_pinecone
 from typing import List
 from dotenv import load_dotenv
 load_dotenv()  # This loads the variables from the .env file automatically
-pdf_path = "./resources/HRPolicy.pdf"
+pdf_path = "./resources/HR_and_Digital_Workspace_Policy.pdf"
 def run():
     # Read HR Policy PDF and extract text
     pages = read_pdf(pdf_path)
